@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZipDrop — Mock File Sharing (Frontend Only)</title>
+  <meta name="description" content="A frontend-only mock of a file uploading and sharing website. No files are actually uploaded." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111828;
+      --muted: #9aa4b2;
+      --text: #e5e7eb;
+      --primary: #6ee7b7;
+      --primary-700: #34d399;
+      --accent: #60a5fa;
+      --danger: #f87171;
+      --ring: rgba(110, 231, 183, 0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(90rem 60rem at 80% -10%, rgba(96,165,250,.15), transparent),
+                  radial-gradient(60rem 40rem at -10% 20%, rgba(110,231,183,.12), transparent),
+                  var(--bg);
+    }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(8px);
+      background: linear-gradient(to bottom, rgba(11,18,32,.85), rgba(11,18,32,.65));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .container { max-width: 1050px; margin: 0 auto; padding: 1rem 1.25rem; }
+    .row { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+    @media (min-width: 960px) { .row { grid-template-columns: 1.15fr .85fr; } }
+
+    .brand { display: flex; align-items: center; gap: .6rem; font-weight: 700; }
+    .brand svg { width: 28px; height: 28px; }
+
+    .hero { text-align: center; padding: 2.25rem 0 1rem; }
+    .hero h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 0 0 .4rem; }
+    .hero p { margin: 0; color: var(--muted); }
+
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 16px; padding: 1rem; }
+
+    .uploader { display: grid; gap: 1rem; }
+
+    .dropzone {
+      border: 2px dashed rgba(255,255,255,.14);
+      border-radius: 16px; padding: 1.25rem; text-align: center;
+      background: rgba(255,255,255,.02);
+      transition: border-color .2s, background .2s, transform .2s, box-shadow .2s;
+    }
+    .dropzone.dragover {
+      border-color: var(--primary);
+      background: rgba(110,231,183,.06);
+      box-shadow: 0 0 0 6px var(--ring);
+      transform: translateY(-1px);
+    }
+    .dropzone h3 { margin: .25rem 0 .25rem; font-size: 1.05rem; }
+    .dropzone p { margin: .25rem 0 0; color: var(--muted); font-size: .95rem; }
+
+    .actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
+    .btn {
+      appearance: none; border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      color: var(--text); border-radius: 12px; padding: .72rem 1rem;
+      font-weight: 600; cursor: pointer; transition: .15s ease; font-size: .95rem;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.25); }
+    .btn.primary { border-color: rgba(110,231,183,.45); background: linear-gradient(180deg, rgba(110,231,183,.25), rgba(110,231,183,.12)); color: #052e26; }
+    .btn.danger { border-color: rgba(248,113,113,.4); background: linear-gradient(180deg, rgba(248,113,113,.22), rgba(248,113,113,.1)); }
+
+    .progress { height: 10px; background: rgba(255,255,255,.06); border-radius: 999px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); }
+    .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: inherit; transition: width .15s linear; }
+
+    .aside { display: grid; gap: 1rem; align-content: start; }
+
+    .panel { display: grid; gap: .75rem; }
+    .panel h3 { margin: 0; font-size: 1rem; }
+    .field { display: flex; align-items: center; gap: .6rem; }
+    input[type="text"] {
+      width: 100%; padding: .65rem .8rem; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04); color: var(--text);
+    }
+
+    .list { display: grid; gap: .6rem; }
+    .file {
+      display: grid; grid-template-columns: auto 1fr auto; gap: .75rem; align-items: center;
+      padding: .7rem .8rem; border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .file .meta { display: grid; gap: .15rem; }
+    .file .name { font-weight: 600; word-break: break-word; }
+    .file .sub { color: var(--muted); font-size: .9rem; }
+    .tag { font-size: .75rem; padding: .25rem .5rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.15); color: var(--muted); }
+
+    footer { margin-top: 2rem; color: var(--muted); text-align: center; font-size: .9rem; }
+    .tiny { font-size: .8rem; color: var(--muted); }
+    .pill { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .6rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); }
+    .copy { cursor: pointer; }
+    .empty { color: var(--muted); text-align: center; padding: .75rem 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 7.5a5.5 5.5 0 0 1 10.81-1.88M20 16.5a5.5 5.5 0 0 1-10.81 1.88" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M7.5 12h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 7.5v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>ZipDrop</span>
+      </div>
+      <div class="pill tiny">Mock • Frontend‑only</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Share files instantly </h1>
+    </section>
+
+    <div class="row">
+      <!-- LEFT: Uploader -->
+      <section class="card uploader">
+        <div id="dropzone" class="dropzone" tabindex="0" aria-label="Upload area" role="button">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 16V4m0 0-3.5 3.5M12 4l3.5 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20 16.5a4.5 4.5 0 0 0-4.5-4.5h-7A4.5 4.5 0 0 0 4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <h3>Drag & drop files here</h3>
+          <p>or</p>
+          <div class="actions">
+            <label class="btn primary" for="fileInput">Choose files</label>
+            <input id="fileInput" type="file" hidden multiple />
+            <button id="fakeUpload" class="btn">Upload</button>
+            <button id="clearAll" class="btn danger">Clear list</button>
+          </div>
+        </div>
+        <div class="progress" aria-hidden="true"><div id="bar" class="bar"></div></div>
+      </section>
+
+      <!-- RIGHT: Panels -->
+      <aside class="aside">
+        <section class="card panel">
+          <h3>Search your uploads</h3>
+          <div class="field">
+            <input id="search" type="text" placeholder="Filter by file name or type…" />
+          </div>
+        </section>
+
+        <section class="card panel">
+          <h3>Recent uploads</h3>
+          <div id="list" class="list" role="list"></div>
+          <div id="empty" class="empty">Nothing here yet — upload something to see it listed.</div>
+        </section>
+
+        <section class="card panel">
+          <h3>About</h3>
+          <p class="tiny">This is a website for file uploading and sharing.</p>
+        </section>
+      </aside>
+    </div>
+
+    <footer>
+      Built for class • © <span id="year"></span> ZipDrop Demo
+    </footer>
+  </main>
+
+  <template id="fileRow">
+    <div class="file" role="listitem">
+      <div class="tag" data-ext></div>
+      <div class="meta">
+        <div class="name" data-name></div>
+        <div class="sub" data-sub></div>
+      </div>
+      <div style="display:flex; gap:.4rem; align-items:center;">
+        <a class="btn" data-link target="_blank" rel="noopener">Download</a>
+        <button class="btn copy" data-copy>Copy link</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // ---- Utilities ----
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const formatBytes = (bytes) => {
+      const units = ['B','KB','MB','GB','TB'];
+      let i = 0, n = bytes || 0;
+      while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+      return `${n.toFixed(n < 10 && i>0 ? 1 : 0)} ${units[i]}`;
+    };
+    const uid = () => Math.random().toString(36).slice(2, 10);
+
+    // ---- State (localStorage) ----
+    const KEY = 'zipdrop:list:v1';
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+    const save = (items) => localStorage.setItem(KEY, JSON.stringify(items));
+
+    let items = load(); // {id, name, size, type, url, createdAt}
+
+    // ---- Elements ----
+    const dropzone = $('#dropzone');
+    const fileInput = $('#fileInput');
+    const fakeUploadBtn = $('#fakeUpload');
+    const clearAllBtn = $('#clearAll');
+    const bar = $('#bar');
+    const list = $('#list');
+    const empty = $('#empty');
+    const search = $('#search');
+
+    const year = new Date().getFullYear();
+    $('#year').textContent = year;
+
+    // ---- Rendering ----
+    function render(filter = '') {
+      list.innerHTML = '';
+      const f = filter.trim().toLowerCase();
+      const filtered = items.filter(it => it.name.toLowerCase().includes(f) || (it.type||'').toLowerCase().includes(f));
+      if (filtered.length === 0) { empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+
+      filtered
+        .sort((a,b) => b.createdAt - a.createdAt)
+        .forEach(it => {
+          const row = document.importNode($('#fileRow').content, true);
+          row.querySelector('[data-ext]').textContent = (it.name.split('.').pop() || it.type || 'file').toUpperCase();
+          row.querySelector('[data-name]').textContent = it.name;
+          row.querySelector('[data-sub]').textContent = `${formatBytes(it.size)} • ${new Date(it.createdAt).toLocaleString()}${it.type ? ' • ' + it.type : ''}`;
+          const link = row.querySelector('[data-link]');
+          link.href = it.url;
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('This is a mock. No real download happens.\n\nFake link: ' + it.url);
+          });
+          const copyBtn = row.querySelector('[data-copy]');
+          copyBtn.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(it.url);
+              copyBtn.textContent = 'Copied!';
+              setTimeout(() => (copyBtn.textContent = 'Copy link'), 1200);
+            } catch {
+              alert('Copy failed. Link:\n' + it.url);
+            }
+          });
+          list.appendChild(row);
+        });
+    }
+
+    // ---- Progress Animation ----
+    function animateProgress(cb) {
+      bar.style.width = '0%';
+      const duration = 1200 + Math.random()*800; // 1.2s - 2s
+      const start = performance.now();
+      const tick = (now) => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        bar.style.width = (eased * 100).toFixed(2) + '%';
+        if (t < 1) requestAnimationFrame(tick); else setTimeout(cb, 180);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    // ---- Fake Upload Handling ----
+    function handleFiles(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      animateProgress(() => {
+        const added = Array.from(fileList).map(file => ({
+          id: uid(),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: `https://zipdrop.example/download/${uid()}?f=${encodeURIComponent(file.name)}`,
+          createdAt: Date.now()
+        }));
+        items = [...added, ...items].slice(0, 100); // cap list
+        save(items);
+        render(search.value);
+      });
+    }
+
+    // Drag & drop
+    ['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+    ;['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+    dropzone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+
+    // Click / keyboard to open file dialog
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }});
+
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+    fakeUploadBtn.addEventListener('click', () => {
+      // create some fake File-like entries when you don't have real files
+      const fake = [
+        { name: 'game-mod-v1.2.zip', size: 12_345_678, type: 'application/zip' },
+        { name: 'screenshot-01.png', size: 2_345_111, type: 'image/png' },
+        { name: 'readme.txt', size: 4_012, type: 'text/plain' },
+      ];
+      handleFiles(fake);
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      if (!confirm('Clear the upload list? (This only affects your browser)')) return;
+      items = []; save(items); render(search.value);
+    });
+
+    search.addEventListener('input', () => render(search.value));
+
+    // Initial paint
+    render('');
+  </script>
+</body>
+</html>
